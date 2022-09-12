@@ -11,22 +11,31 @@ using namespace Cantera;
 ////////////////////////////////////////////////////////////////////////////////
 
 int main() {
+
+    //--------------- user inputs
+
+    string mechName   = "gri30.yaml";
+
+    string xin = "CH4:1, O2:2, N2:7.52";
+    double Tin = 300;
+    double P   = 101325;
+
+    int    nT   = 500;            // number of T values to solve for
+
+    double Tmin = Tin;
+    double TmaxDelta = -5.1;      // this can be 0.1 or 0.01 for stoich methane/air, but higher like 5 or more for lean to 0.03 mixf
+
+    double taug = 0.01;           // first guess for tau; solver likes a low guess
         
     //--------------- initialize cantera
 
-    //auto sol = newSolution("H2O2.yaml", "", "None");
-    auto sol = newSolution("gri30.yaml", "", "None");
+    auto sol = newSolution(mechName, "", "None");
     auto gas = sol->thermo();
     auto kin = sol->kinetics();
 
     size_t nsp  = gas->nSpecies();
 
     //--------------- inlet gas state
-
-    //string xin = "H2:1, O2:0.5, N2:1.88";
-    string xin = "CH4:1, O2:2, N2:7.52";
-    double Tin = 300;
-    double P   = 101325;
 
     vector<double> yin(nsp);
     double         hin;
@@ -41,8 +50,6 @@ int main() {
     double Tad = gas->temperature();
     vector<double> yad(nsp);
     gas->getMassFractions(&yad[0]);
-
-    cout << endl << "Tad = " << Tad << endl;
 
     //--------------- PSR object, scaling arrays
 
@@ -60,14 +67,11 @@ int main() {
 
     //--------------- solve psr
 
-    int    nT   = 500;            // number of T values to solve for
-    double Tmin = Tin;
-    double Tmax = Tad-0.01;
+    double Tmax = Tad + TmaxDelta;
     vector<double> Tvec(nT);      // temperature values
     for(int i=0; i<nT; i++)
-        Tvec[i] = Tmax - (double)(i)/nT * (Tmax - Tmin);
+        Tvec[i] = Tmax - (double)(i)/(nT-1) * (Tmax - Tmin);
 
-    double taug = 1;           // first guess for tau (large for near equilibrium
     vector<double> y_tau = yad;   // unknown vector: species mass fractions and tau
     y_tau.push_back(taug);
 
