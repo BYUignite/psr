@@ -82,7 +82,7 @@ int main() {
     ofile << "# tau (s), T (K) " << endl;
 
     for(int i=0; i<nT; i++) {                                      // loop over each point
-        psr.set_T(Tvec[i]);
+        psr.setT(Tvec[i]);
         psr.solvePSR(y_tau, y_tau_scale, f_scale);                 // solve psr at this point
         ys[i].insert(ys[i].begin(), y_tau.begin(), y_tau.end()-1); // store solution
         taus[i] = y_tau.back();                                    // store solution
