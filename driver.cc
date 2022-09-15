@@ -90,7 +90,7 @@ int main() {
     }
 
     ofile.close();
-    system("ipython plot.py");
+    system("ipython3 plot.py");
 
     return 0;
 }
