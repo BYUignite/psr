@@ -15,11 +15,8 @@ int main() {
     //--------------- user inputs
 
     string mechName   = "gri30.yaml";
-    //string mechName   = "skel.yaml";
-    //string mechName   = "sandiego.yaml";
 
     string xin = "CH4:1, O2:2, N2:7.52";
-    //string xin = "C3H8:1, O2:5, N2:18.8";
     double Tin = 300;
     double P   = 101325;
 
