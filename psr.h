@@ -132,16 +132,14 @@ static int func(N_Vector ytauvec, N_Vector fvec, void *user_data) {
     realtype *ytau = N_VGetArrayPointer(ytauvec);
     realtype *f  = N_VGetArrayPointer(fvec);
 
-    //psr->gas->setMassFractions(ytau);
     psr->gas->setMassFractions_NoNorm(ytau);
     psr->gas->setState_TP(psr->T, psr->P);
     double rho = psr->gas->density();
     vector<double> rr(psr->neq-1);
     psr->kin->getNetProductionRates(&rr[0]);
 
-    for(size_t k=0; k<psr->neq-1; k++) {
+    for(size_t k=0; k<psr->neq-1; k++)
         f[k] = (psr->yin[k] - ytau[k])/ytau[psr->neq-1] + rr[k]*psr->gas->molecularWeight(k)/rho;
-    }
     f[psr->neq-1] = psr->gas->enthalpy_mass() - psr->hin;
 
     return 0;

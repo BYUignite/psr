@@ -15,8 +15,11 @@ int main() {
     //--------------- user inputs
 
     string mechName   = "gri30.yaml";
+    //string mechName   = "skel.yaml";
+    //string mechName   = "sandiego.yaml";
 
     string xin = "CH4:1, O2:2, N2:7.52";
+    //string xin = "C3H8:1, O2:5, N2:18.8";
     double Tin = 300;
     double P   = 101325;
 
@@ -29,7 +32,7 @@ int main() {
         
     //--------------- initialize cantera
 
-    auto sol = newSolution(mechName, "", "None");
+    auto sol = newSolution(mechName, "", "none");
     auto gas = sol->thermo();
     auto kin = sol->kinetics();
 
@@ -79,18 +82,22 @@ int main() {
     vector<double>         taus(nT);                           // store tau at each point
 
     ofstream ofile("tau_T.dat");
-    ofile << "# tau (s), T (K) " << endl;
+    ofile << "# tau (s), T (K), Y_CO, Y_CO2 " << endl;
 
     for(int i=0; i<nT; i++) {                                      // loop over each point
         psr.setT(Tvec[i]);
         psr.solvePSR(y_tau, y_tau_scale, f_scale);                 // solve psr at this point
         ys[i].insert(ys[i].begin(), y_tau.begin(), y_tau.end()-1); // store solution
         taus[i] = y_tau.back();                                    // store solution
-        ofile << y_tau.back() << " " << Tvec[i] << endl;
+        ofile << y_tau.back() << " " 
+              << Tvec[i] << " " 
+              << ys[i][gas->speciesIndex("CO")] << " "
+              << ys[i][gas->speciesIndex("CO2")] << " "
+              << endl;
     }
 
     ofile.close();
-    system("ipython3 plot.py");
+    system("ipython plot.py");
 
     return 0;
 }
