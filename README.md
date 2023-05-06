@@ -12,7 +12,7 @@ $$h = h^{in}.$$
 
 For a given $\tau$, the PSR has multiple solutions: burning, extinguished, and an intermediate branch. The $T(\tau)$ profile is in the shape of an "S". In order to solve the full S-curve without considering multiple solutions, the temperature is specified between the inlet and equilibrium values and $\tau$ is solved as one of the unknowns. The solution begins near adiabatic equilibrium and then progresses to lower $T$, using previous solutions as the guess for the next point.
 
-<img src="tau_T.png" width="500">
+<img src="run/tau_T.png" width="500">
 
 ## Build the code 
 * Create and enter directory ```build```
