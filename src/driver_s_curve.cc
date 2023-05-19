@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <cstdlib>
 
@@ -21,12 +22,10 @@ int main() {
     double P   = 101325;
 
     int    nT   = 500;            // number of T values to solve for
-
-    double Tmin = Tin;
     double TmaxDelta = -5.1;      // this can be 0.1 or 0.01 for stoich methane/air, but higher like 5 or more for lean to 0.03 mixf
 
     double taug = 0.01;           // first guess for tau; solver likes a low guess
-        
+
     //--------------- initialize cantera
 
     auto sol = newSolution(mechName, "", "none");
@@ -44,36 +43,24 @@ int main() {
     gas->getMassFractions(&yin[0]);
     hin = gas->enthalpy_mass();
 
-    //--------------- adiabatic equilibrium gas state
+    //--------------- psr object
+
+    PSR psr(gas, kin);
+
+    psr.setInlet(yin, hin, P);
+
+    //--------------- adiabatic equilibrium state
 
     gas->equilibrate("HP");
-    double Tad = gas->temperature();
-    vector<double> yad(nsp);
-    gas->getMassFractions(&yad[0]);
+    double Teq = gas->temperature();
 
-    //--------------- PSR object, scaling arrays
+    //--------------- compute S-curve
 
-    PSR psr(gas, kin, yin, hin, P);
-
-    vector<double> y_tau_scale(nsp+1, 1.0);
-    vector<double> f_scale(nsp+1, 1.0);
-
-    //for(int k=0; k<nvar; k++){{{{
-    //    ytauscale[k] = ytau[k];
-    //    if(ytauscale[k] < 1E-10) ytauscale[k] = 1E-10;
-    //    ytauscale[k] = 1.0/ytauscale[k];
-    //    //fscale[k] = 1.0/(0.1/tau);
-    //}}}}
-
-    //--------------- solve psr
-
-    double Tmax = Tad + TmaxDelta;
+    double Tmax = Teq + TmaxDelta;
     vector<double> Tvec(nT);      // temperature values
+    double Tmin = Tin;
     for(int i=0; i<nT; i++)
         Tvec[i] = Tmax - (double)(i)/(nT-1) * (Tmax - Tmin);
-
-    vector<double> y_tau = yad;   // unknown vector: species mass fractions and tau
-    y_tau.push_back(taug);
 
     vector<vector<double>> ys(nT, vector<double>(nsp, 0.0));   // store y vec at each point
     vector<double>         taus(nT);                           // store tau at each point
@@ -81,12 +68,21 @@ int main() {
     ofstream ofile("tau_T.dat");
     ofile << "# tau (s), T (K), Y_CO, Y_CO2 " << endl;
 
-    for(int i=0; i<nT; i++) {                                      // loop over each point
+    ofile << scientific;
+    ofile << setprecision(10);
+    for(int i=0; i<nT; i++) {        // loop over each point
         psr.setT(Tvec[i]);
-        psr.solvePSR(y_tau, y_tau_scale, f_scale);                 // solve psr at this point
-        ys[i].insert(ys[i].begin(), y_tau.begin(), y_tau.end()-1); // store solution
-        taus[i] = y_tau.back();                                    // store solution
-        ofile << y_tau.back() << " " 
+        i==0 ? psr.setInitialGuess(taug, yin, true) :        // true --> equilibrium not yin
+               psr.setInitialGuess(psr.tau, psr.y, false);
+        psr.solve();                 // solve psr at this point
+        ys[i] = psr.y;               // store solution
+        taus[i] = psr.tau;
+        ofile << taus[i] << " " 
+              << Tvec[i] << " " 
+              << ys[i][gas->speciesIndex("CO")] << " "
+              << ys[i][gas->speciesIndex("CO2")] << " "
+              << endl;
+        cout << taus[i] << " " 
               << Tvec[i] << " " 
               << ys[i][gas->speciesIndex("CO")] << " "
               << ys[i][gas->speciesIndex("CO2")] << " "
@@ -98,4 +94,3 @@ int main() {
 
     return 0;
 }
-

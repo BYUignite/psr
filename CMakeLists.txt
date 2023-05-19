@@ -1,24 +1,24 @@
-cmake_minimum_required(VERSION 3.1)
+################### PREAMBLE ###############################
 
-project(psr LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.15)
+
+project(psr VERSION 0.1.0 LANGUAGES CXX)
+
+################### PROJECT SETUP ##########################
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)       # Release or Debug
+endif()
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
+
+# ---- set C++ language standard ----
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS NO)
 
-add_executable(psr.x driver.cc psr.h)
+################### MAIN PROJECT TARGETS #####################
 
-if(APPLE)
-    find_library(ACCELERATE Accelerate)
-endif()
-find_package(Threads REQUIRED)
-find_library(KINSOL sundials_kinsol)
-find_library(CVODES sundials_cvodes)
-find_library(CANTERA cantera)
-
-target_include_directories(psr.x PRIVATE "/usr/local/include")
-
-target_link_libraries(psr.x ${CANTERA} ${CVODES} ${KINSOL} ${ACCELERATE} Threads::Threads)
-
-install(TARGETS psr.x DESTINATION "${PROJECT_SOURCE_DIR}/run")
+add_subdirectory(src)
 
